@@ -1,4 +1,6 @@
 import os
+import asyncio
+import time
 import assemblyai as aai
 from packages.elevenlabs_tts import speak  # Update the class name if different
 from packages.sales_chatbot import SalesChatbot
@@ -14,7 +16,7 @@ class VoiceBot:
         self.transcriber = None
         self.chatbot = SalesChatbot()
             
-    def start_transcription(self):
+    async def start_transcription(self):
         self.transcriber = aai.RealtimeTranscriber(
             sample_rate = 16000,
             on_data = self.on_data,
@@ -24,11 +26,11 @@ class VoiceBot:
             end_utterance_silence_threshold = 500
         )
 
-        self.transcriber.connect()
+        await asyncio.to_thread(self.transcriber.connect)
         microphone_stream = aai.extras.MicrophoneStream(sample_rate =16000)
         self.transcriber.stream(microphone_stream)
     
-    def stop_transcription(self):
+    async def stop_transcription(self):
         if self.transcriber:
             self.transcriber.close()
             self.transcriber = None
@@ -44,7 +46,7 @@ class VoiceBot:
 
         if isinstance(transcript, aai.RealtimeFinalTranscript):
             print("[User]: " + transcript.text, end="\n")
-            self.respond(transcript.text)
+            asyncio.run(self.respond(transcript.text))
         else:
             print("[User]: " + transcript.text, end="\r")
 
@@ -55,19 +57,20 @@ class VoiceBot:
     def on_close(self):
         return
     
-    def respond(self, transcript):
-
-        self.stop_transcription()
-
+    async def respond(self, transcript):
+    
+        await self.stop_transcription()
         # generate response from OpenAI
-        response = self.chatbot.generate_response(transcript)
+        response = await asyncio.to_thread(self.chatbot.generate_response, transcript)
 
         print("[Bot]: ", response)
 
         # speak response using ElevenLabs
-        speak(response)
+        await asyncio.to_thread(speak, response)
+
+        await self.start_transcription()
+
         
-        self.start_transcription()
 
 voice_bot = VoiceBot()
-voice_bot.start_transcription()
+asyncio.run(voice_bot.start_transcription())
