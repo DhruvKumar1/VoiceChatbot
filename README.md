@@ -71,5 +71,7 @@ For example you could use:
 
 I used async functions to make the process parallelized. The main parallization is in the `respond` function. I parallelized this function so that the reponse generation and the text to speech do not block eachother. I utelized the `asyncio` python library to do this and included `await` statements for respective function calls to make them parallelized.  
 
-Please also include a recorded video showing how fast your chatbot implementation is to respond.
+
+Here is a recording of my implementation: [Loom](https://www.loom.com/share/695ac5e9ea3d422c83ea217f893855c4?sid=6690c1d7-e6a9-401f-9675-4f5a830f5383)
+
 
